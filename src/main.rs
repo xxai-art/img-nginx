@@ -31,7 +31,7 @@ struct 配置 {
   动: HashMap<String, u32>,
 }
 
-const WARIN_TIMEOUT: Duration = Duration::from_secs(12 * 60 * 60);
+const WARIN_TIMEOUT: u64 = 18 * 60 * 60;
 
 const IMG_HASH: [u8; 32] = [
   0x73, 0x6d, 0xc7, 0x09, 0xa1, 0x7d, 0xe0, 0x4b, 0xa8, 0x91, 0x43, 0xa4, 0x1b, 0x8c, 0xbc, 0x6a,
@@ -53,8 +53,8 @@ async fn ping(host: &str, port: u16) -> Result<()> {
   Err(Error::ImgHashNotMatch.into())
 }
 
-async fn gen(写: impl AsRef<Path>, working: &HashMap<Vec<u8>, u64>, conf: &配置) -> Result<()> {
-  // for host in working {}
+async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置) -> Result<()> {
+  // for host in down {}
   Ok(())
 }
 
@@ -70,9 +70,9 @@ async fn main() -> Result<()> {
     conf.写.clone().into()
   };
 
-  let mut working = HashMap::with_capacity(conf.动.len());
+  let mut down = HashMap::with_capacity(conf.动.len());
   for host_str in conf.动.keys() {
-    working.insert(ip_bin(host_str).unwrap(), 0);
+    down.insert(ip_bin(host_str).unwrap(), 0);
   }
 
   let mut change = true;
@@ -84,21 +84,28 @@ async fn main() -> Result<()> {
 
     for (host_str, result) in conf.动.keys().zip(join_all(await_li).await) {
       let host = ip_bin(host_str).unwrap();
-      let exist = working.contains_key(&host);
+      let pre_sec = down.get(&host);
       if let Err(err) = result {
-        if exist {
-          warn!("{} {:?}", host_str, err);
-          working.remove(&host);
+        let now = sts::sec();
+        if let Some(pre_sec) = pre_sec {
+          if (now - pre_sec) > WARIN_TIMEOUT {
+            down.insert(host, now);
+            warn!("{}", err);
+            xerr::log!(xwarn::send(format!("img {err}")).await);
+          }
+        } else {
+          warn!("{}", err);
+          down.insert(host, now);
           change = true;
         }
       } else {
-        if !exist {
+        if pre_sec.is_some() {
           change = true;
-          working.insert(host, sts::sec());
+          down.remove(&host);
         }
       }
       if change {
-        xerr::log!(gen(&写, &working, &conf).await);
+        xerr::log!(gen(&写, &down, &conf).await);
         change = false;
       }
     }
