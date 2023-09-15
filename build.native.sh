@@ -43,5 +43,5 @@ build() {
   esac
 }
 
-build rsrv
-build xws
+name=$(cat Cargo.toml | dasel -r toml 'package.name' | tr -d "'")
+build $name
