@@ -2,7 +2,7 @@ use std::{
   collections::{HashMap, HashSet},
   env,
   fs::read_to_string,
-  time::Duration,
+  path::Path,
 };
 
 use anyhow::Result;
@@ -11,9 +11,10 @@ use futures::future::join_all;
 use serde::Deserialize;
 use thiserror::Error;
 use tokio::time::{sleep, Duration};
+use tracing::warn;
 
 mod ip_bin;
-use ip_bin::ip_bin;
+use ip_bin::{bin_ip, ip_bin};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -52,29 +53,53 @@ async fn ping(host: &str, port: u16) -> Result<()> {
   Err(Error::ImgHashNotMatch.into())
 }
 
+async fn gen(写: impl AsRef<Path>, working: &HashMap<Vec<u8>, u64>, conf: &配置) -> Result<()> {
+  // for host in working {}
+  Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+  loginit::init();
   let pwd = env::current_dir()?;
   let conf: 配置 = serde_yaml::from_str(&read_to_string(pwd.join("conf.yml"))?)?;
 
   let 写 = if !conf.写.starts_with('/') {
-    pwd.join(conf.写)
+    pwd.join(&conf.写)
   } else {
-    conf.写.into()
+    conf.写.clone().into()
   };
 
-  let mut working = HashSet::new();
+  let mut working = HashMap::with_capacity(conf.动.len());
+  for host_str in conf.动.keys() {
+    working.insert(ip_bin(host_str).unwrap(), 0);
+  }
 
+  let mut change = true;
   loop {
     let mut await_li = Vec::with_capacity(conf.动.len());
     for host in conf.动.keys() {
       await_li.push(ping(&host, conf.端口));
     }
 
-    for (host, result) in conf.动.keys().zip(join_all(await_li).await) {
+    for (host_str, result) in conf.动.keys().zip(join_all(await_li).await) {
+      let host = ip_bin(host_str).unwrap();
+      let exist = working.contains_key(&host);
       if let Err(err) = result {
+        if exist {
+          warn!("{} {:?}", host_str, err);
+          working.remove(&host);
+          change = true;
+        }
       } else {
-        working.add(host);
+        if !exist {
+          change = true;
+          working.insert(host, sts::sec());
+        }
+      }
+      if change {
+        xerr::log!(gen(&写, &working, &conf).await);
+        change = false;
       }
     }
     sleep(Duration::from_secs(60)).await;
