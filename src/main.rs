@@ -70,6 +70,8 @@ async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置)
     let host = ip_bin(host_str).unwrap();
     if !down.contains_key(&host) {
       push!(host_str, weight);
+    } else {
+      out.push(format!("# {host_str}"));
     }
   }
   conf.静.iter().for_each(|(h, w)| push!(h, w));
