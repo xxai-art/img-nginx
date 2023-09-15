@@ -8,7 +8,7 @@ export NATIVE=1
 build() {
   name=$1
   cd $DIR/$name
-  source ../sh/cflag.sh
+  source sh/cflag.sh
 
   cargo build $RUST_FEATURES --release --target $RUST_TARGET
 
