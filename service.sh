@@ -18,7 +18,8 @@ service_sh=/opt/bin/$name.service.sh
 
 cat >$service_sh <<EOF
 #!/usr/bin/env bash
-source $DIR/env.sh
+cd $DIR
+source sh/env.sh
 exec $EXE
 EOF
 
