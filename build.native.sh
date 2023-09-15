@@ -12,7 +12,6 @@ export NATIVE=1
 
 build() {
   name=$1
-  cd $DIR/$name
   source sh/cflag.sh
 
   cargo build $RUST_FEATURES --release --target $RUST_TARGET
@@ -24,7 +23,6 @@ build() {
     sudo mv $pre /tmp
   fi
 
-  cd $DIR
   sudo mkdir -p /opt/bin
   sudo mv target/$RUST_TARGET/release/$name /opt/bin/$name
 
