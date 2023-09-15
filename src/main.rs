@@ -12,7 +12,8 @@ struct 配置 {
   动: HashMap<String, u32>,
 }
 
-fn main() -> Result<()> {
+#[tokio::test]
+async fn main() -> Result<()> {
   let pwd = env::current_dir()?;
   let conf: 配置 = serde_yaml::from_str(&read_to_string(pwd.join("conf.yml"))?)?;
 
@@ -22,6 +23,7 @@ fn main() -> Result<()> {
     conf.写.into()
   };
 
+  dbg!(conf);
   dbg!(写);
   Ok(())
 }

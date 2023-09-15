@@ -8,6 +8,7 @@ edition = "2021"
 anyhow = "1.0.75"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_yaml = "0.9.25"
+xwarn = "0.0.10"
 
 [profile.release]
 lto = true
@@ -18,3 +19,6 @@ overflow-checks = false
 panic = 'abort'
 debug-assertions = false
 strip = true
+
+[dev-dependencies]
+tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros"] }
