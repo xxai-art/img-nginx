@@ -61,7 +61,7 @@ async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置)
   macro_rules! push {
     ($host_str:ident, $weight:ident) => {
       out.push(format!(
-        "server {}:{} weight {} {};",
+        "server {}:{} weight={} {};",
         $host_str, conf.端口, $weight, conf.参
       ))
     };
