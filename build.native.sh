@@ -4,7 +4,12 @@ DIR=$(realpath $0) && DIR=${DIR%/*}
 cd $DIR
 set -ex
 
+if ! [ -x "$(command -v dasel)" ]; then
+  go install github.com/tomwright/dasel/v2/cmd/dasel@master
+fi
+
 export NATIVE=1
+
 build() {
   name=$1
   cd $DIR/$name
