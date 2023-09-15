@@ -1,5 +1,5 @@
 use std::{
-  collections::{HashMap, HashSet},
+  collections::HashMap,
   env,
   fs::{read_to_string, File},
   io::Write,
@@ -7,7 +7,6 @@ use std::{
 };
 
 use anyhow::Result;
-use blake3;
 use futures::future::join_all;
 use serde::Deserialize;
 use thiserror::Error;
@@ -68,7 +67,7 @@ async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置)
     };
   }
   for (host_str, weight) in &conf.动 {
-    let host = ip_bin(&host_str).unwrap();
+    let host = ip_bin(host_str).unwrap();
     if !down.contains_key(&host) {
       push!(host_str, weight);
     }
@@ -103,7 +102,7 @@ async fn main() -> Result<()> {
   loop {
     let mut await_li = Vec::with_capacity(conf.动.len());
     for host in conf.动.keys() {
-      await_li.push(ping(&host, conf.端口));
+      await_li.push(ping(host, conf.端口));
     }
 
     for (host_str, result) in conf.动.keys().zip(join_all(await_li).await) {
@@ -122,11 +121,9 @@ async fn main() -> Result<()> {
           down.insert(host, now);
           change = true;
         }
-      } else {
-        if pre_sec.is_some() {
-          change = true;
-          down.remove(&host);
-        }
+      } else if pre_sec.is_some() {
+        change = true;
+        down.remove(&host);
       }
       if change {
         xerr::log!(gen(&写, &down, &conf).await);

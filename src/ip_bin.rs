@@ -1,4 +1,4 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::IpAddr;
 
 pub fn ip_bin(ip_str: &str) -> Option<Vec<u8>> {
   match ip_str.parse::<IpAddr>() {

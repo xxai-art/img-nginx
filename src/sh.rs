@@ -2,7 +2,6 @@ use std::process::Command;
 
 use anyhow::Result;
 use thiserror::Error;
-use tracing::{info, warn};
 
 #[derive(Error, Debug)]
 pub enum Error {
