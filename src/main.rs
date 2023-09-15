@@ -76,8 +76,15 @@ async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置)
   }
   conf.静.iter().for_each(|(h, w)| push!(h, w));
   File::create(写)?.write_all(out.join("\n").as_bytes())?;
-  match sh("nginx -s reload") {
-    Ok(s) => info!(s),
+  let cmd = "nginx -s reload";
+  match sh(&cmd) {
+    Ok(s) => {
+      if s.is_empty() {
+        info!("{cmd}")
+      } else {
+        info!("{cmd} → {s}")
+      }
+    }
     Err(err) => warn!("{}", err),
   }
   Ok(())
