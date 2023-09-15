@@ -12,13 +12,13 @@ use futures::future::join_all;
 use serde::Deserialize;
 use thiserror::Error;
 use tokio::time::{sleep, Duration};
-use tracing::warn;
+use tracing::{info, warn};
 
 mod ip_bin;
 use ip_bin::ip_bin;
 
-mod nginx_reload;
-use nginx_reload::nginx_reload;
+mod sh;
+use sh::sh;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -75,7 +75,10 @@ async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置)
   }
   conf.静.iter().for_each(|(h, w)| push!(h, w));
   File::create(写)?.write_all(out.join("\n").as_bytes())?;
-  nginx_reload();
+  match sh("nginx -s reload") {
+    Ok(s) => info!(s),
+    Err(err) => warn!("{}", err),
+  }
   Ok(())
 }
 
