@@ -12,6 +12,9 @@ use serde::Deserialize;
 use thiserror::Error;
 use tokio::time::{sleep, Duration};
 
+mod ip_bin;
+use ip_bin::ip_bin;
+
 #[derive(Error, Debug)]
 pub enum Error {
   #[error("img hash not match")]
