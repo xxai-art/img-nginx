@@ -1,7 +1,8 @@
 use std::{
   collections::{HashMap, HashSet},
   env,
-  fs::read_to_string,
+  fs::{read_to_string, File},
+  io::Write,
   path::Path,
 };
 
@@ -14,7 +15,10 @@ use tokio::time::{sleep, Duration};
 use tracing::warn;
 
 mod ip_bin;
-use ip_bin::{bin_ip, ip_bin};
+use ip_bin::ip_bin;
+
+mod nginx_reload;
+use nginx_reload::nginx_reload;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -54,7 +58,24 @@ async fn ping(host: &str, port: u16) -> Result<()> {
 }
 
 async fn gen(写: impl AsRef<Path>, down: &HashMap<Vec<u8>, u64>, conf: &配置) -> Result<()> {
-  // for host in down {}
+  let mut out = Vec::with_capacity(conf.动.len() + conf.静.len() - down.len());
+  macro_rules! push {
+    ($host_str:ident, $weight:ident) => {
+      out.push(format!(
+        "server {}:{} weight {} {};",
+        $host_str, conf.端口, $weight, conf.参
+      ))
+    };
+  }
+  for (host_str, weight) in &conf.动 {
+    let host = ip_bin(&host_str).unwrap();
+    if !down.contains_key(&host) {
+      push!(host_str, weight);
+    }
+  }
+  conf.静.iter().for_each(|(h, w)| push!(h, w));
+  File::create(写)?.write_all(out.join("\n").as_bytes())?;
+  nginx_reload();
   Ok(())
 }
 
