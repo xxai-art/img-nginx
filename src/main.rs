@@ -134,10 +134,10 @@ async fn main() -> Result<()> {
         change = true;
         down.remove(&host);
       }
-      if change {
-        xerr::log!(gen(&写, &down, &conf).await);
-        change = false;
-      }
+    }
+    if change {
+      xerr::log!(gen(&写, &down, &conf).await);
+      change = false;
     }
     sleep(Duration::from_secs(60)).await;
   }
