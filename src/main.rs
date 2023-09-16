@@ -44,7 +44,7 @@ const IMG_HASH: [u8; 32] = [
 async fn ping(host: &str, port: u16) -> Result<()> {
   let url = format!("http://{host}:{port}/1");
   let client = reqwest::ClientBuilder::new()
-    .timeout(Duration::from_secs(10))
+    .timeout(Duration::from_secs(50))
     .build()?;
 
   let bin = client.get(url).send().await?.bytes().await?;
